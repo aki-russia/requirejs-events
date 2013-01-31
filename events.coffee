@@ -1,6 +1,8 @@
 # requirejs-events v 0.0.1
 # (c) 2012 Dmitriy Kharchenko
+# https://github.com/aki-russia/requirejs-events
 # Freely distributable under the MIT license.
+# 
 #
 # Simple events bus inside require.js module.
 

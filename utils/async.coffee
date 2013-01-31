@@ -1,8 +1,9 @@
 # requirejs-async v 0.0.1
 # (c) 2012 Dmitriy Kharchenko
+# https://github.com/aki-russia/requirejs-async
 # Freely distributable under the MIT license.
 #
-# Provides nice interface for async working with huge amount of data
+# Easy async working with huge amount of data
 
 
 define [], ->
