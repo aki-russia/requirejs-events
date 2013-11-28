@@ -2,12 +2,9 @@
 # (c) 2012 Dmitriy Kharchenko
 # https://github.com/aki-russia/requirejs-events
 # Freely distributable under the MIT license.
-# 
-#
-# Simple events bus inside require.js module.
 
-define ['utils/async', 'underscore', 'utils/guid'], (async, _, guid) ->
-  async_event_bus = async()
+Mangra = new () ->
+  batch_thread = batch()
 
   Bus = (@name) ->
     @_handlers = []
@@ -19,10 +16,11 @@ define ['utils/async', 'underscore', 'utils/guid'], (async, _, guid) ->
       handlers = (handlers or @_handlers).concat []
       event_data = 
         name: @name
-      args = if _.isArray @_last_params then @_last_params else [@_last_params]
+
+      args = if toString.call(@_last_params) is '[object Array]' then @_last_params else [@_last_params]
       args.push event_data
 
-      async_event_bus.pick(handlers).each (handler, index) ->
+      batch_thread.use(handlers).each (handler, index) ->
         handler.apply handler.context, args
 
     once: (handler, context, options) ->
@@ -34,7 +32,7 @@ define ['utils/async', 'underscore', 'utils/guid'], (async, _, guid) ->
     on: (handler, context, options) ->
       handler.context = context
       handler.options = options
-      handler.id = guid()
+      handler.id = guid_generator()
       @_handlers.push handler
       if options? and options.recall? and @_last_params?
         @_handlers_caller [handler]
@@ -49,6 +47,7 @@ define ['utils/async', 'underscore', 'utils/guid'], (async, _, guid) ->
     fire: (data) ->
       @_last_params = data
       @_handlers_caller()
+
 
   Events = (@name) ->
      @list = {}
@@ -94,6 +93,4 @@ define ['utils/async', 'underscore', 'utils/guid'], (async, _, guid) ->
     fire: (name, attributes) ->
       @create(name).fire attributes
 
-  events = new Events
-
-  events
+  new Events
