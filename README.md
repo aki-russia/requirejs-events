@@ -1,6 +1,6 @@
-requirejs-events
+Mangra
 ================
 
-Simple events bus inside require.js module.
+Simple events bus.
 
 Freely distributable under the MIT license.
