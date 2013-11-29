@@ -23,16 +23,10 @@ Mangra = new () ->
       batch_thread.use(handlers).each (handler, index) ->
         handler.apply handler.context, args
 
-    once: (handler, context, options) ->
-      once_handler = =>
-        handler.apply(@, arguments)
-        @off once_handler
-      @on once_handler, context, options
-
     on: (handler, context, options) ->
       handler.context = context
       handler.options = options
-      handler.id = guid_generator()
+      handler.id = ui_guid_generator()
       @_handlers.push handler
       if options? and options.recall? and @_last_params?
         @_handlers_caller [handler]
@@ -57,13 +51,14 @@ Mangra = new () ->
     list: {}
 
     init: (object) ->
-      bus = @sprout()
-      object.fire = -> return bus.fire.apply bus, arguments
-      object.once = -> return bus.once.apply bus, arguments
-      object.on = ->   return bus.on.apply bus, arguments
-      object.off = ->  return bus.off.apply bus, arguments
+      events_bus = @sprout()
+      object.fire = -> return events_bus.fire.apply bus, arguments
+      object.once = -> return events_bus.once.apply bus, arguments
+      object.on = ->   return events_bus.on.apply bus, arguments
+      object.off = ->  return events_bus.off.apply bus, arguments
 
     sprout: (name) ->
+      name = name or ui_guid_generator()
       instance = @[name] or new Events name
       if name?
         @[name] = instance
@@ -80,12 +75,22 @@ Mangra = new () ->
 
 
     once: (name, handler, context, options) ->
-      @create(name).once handler, context, options
+      events_bus = @
+      once_handler = ->
+        handler.apply(@, arguments)
+        events_bus.off once_handler
+
+      @create(name).on once_handler, context, options
+
+      () ->
+        events_bus.off name, once_handler
 
     on: (name, handler, context, options) ->
       events_names = name.split /\s*,\s*/
       for event_name in events_names
         @create(event_name).on handler, context, options
+      () =>
+        @off name, handler
 
     off: (name, handler) ->
       @create(name).off handler
