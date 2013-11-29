@@ -1,7 +1,7 @@
 Mangra
 ================
 
-Simple events bus.
+Simple and fast events bus.
 
 ## Usage
 
@@ -28,10 +28,14 @@ Providing context for handler:
     }, { foo: "bar"} );
     
 Recall handler, when it bond after event was fired
+	
+	mangra.fire('some_event');
 
-	mangra.on('some_event', function(){
+	// handler will be called immediately
+	mangra.on('some_event', function(){ 
 		console.log(this.foo);
     }, { foo: "bar"} , {recall: true} );
+        
 	
 #### Bind handler to event, call it only once
 
