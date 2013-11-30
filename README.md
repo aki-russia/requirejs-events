@@ -1,13 +1,11 @@
 Mangra
 ================
 
-Simple and fast events bus.
+Simple, small and fast events bus.
 
 ## Usage
 
-As default, `mangra` refers to global events bus, you can bind/undind/once/etc handlers to different events.
-
-	
+As default, `mangra` refers to global events bus.
 
 
 #### Binding handlers
@@ -71,7 +69,7 @@ You can `sprout` new event busses from global or any another, it is useful when 
 
 `mangra.sprout([bus_name])`
 
-If name is not given it will be generated automatically.
+If name is not given, bus will not be discoverable by it name in parent bus.
 
 	var new_bus = mangra.sprout('new_bus_name');
 	
@@ -82,12 +80,13 @@ If name is not given it will be generated automatically.
 	new_bus.on('some_event', handler);
 	
 	mangra.fire('some_event'); // the handler will not fire
-	new_bus.fire('some_event'); // the handler will fire
+  new_bus.fire('some_event'); // the handler will fire
+	mangra.new_bus_name.fire('some_event'); // the handler will fire
 	
 	
 #### Initialize object as events bus 
 
-Also you can `init`  any object as events bus, useful when you need to provide events-like interface for particular object,
+Also you can `init`  any object as events bus, useful when you need to provide events-like interface for particular object
 
 `mangra.init(object_to_init)`
 
