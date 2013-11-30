@@ -1,4 +1,4 @@
-# requirejs-events v 0.0.1
+# mangra v 0.0.1
 # (c) 2012 Dmitriy Kharchenko
 # https://github.com/aki-russia/requirejs-events
 # Freely distributable under the MIT license.
@@ -24,8 +24,8 @@ Mangra = new () ->
         handler.apply handler.context, args
 
     on: (handler, context, options) ->
-      handler.context = context
-      handler.options = options
+      handler.context = context or handler.context
+      handler.options = options or handler.options
       handler.id = ui_guid_generator()
       @_handlers.push handler
       if options? and options.recall? and @_last_params?
@@ -48,7 +48,13 @@ Mangra = new () ->
      @
 
   Events:: =
+
+    #### Events::list
+    # List of events in current bus
     list: {}
+
+    #### Events::init(object)
+    # Initialize provided object with new events bus interface.
 
     init: (object) ->
       events_bus = @sprout()
@@ -57,12 +63,20 @@ Mangra = new () ->
       object.on = ->   return events_bus.on.apply bus, arguments
       object.off = ->  return events_bus.off.apply bus, arguments
 
+    #### Events::sprout([name])
+    # Allows you to sprout new event busses existing one,
+    # useful when you need to incapsulate some events inside particular module.
+    # New bus discoverable by the name provided. If name isn't provided, then bus not be saved in parent, for memory sake.
+
     sprout: (name) ->
-      name = name or ui_guid_generator()
       instance = @[name] or new Events name
       if name?
         @[name] = instance
       instance
+
+
+    #### Events::create([name])
+    # Creates bus for particular event, if event's bus already exists — return it.
 
     create: (name) ->
       if not name
@@ -73,6 +87,8 @@ Mangra = new () ->
 
       @list[name] = new Bus name
 
+    #### Events::once(name, handler, [context], [options])
+    # Binds handler to event and calls it only once. Returns function that will unbind handler from event.
 
     once: (name, handler, context, options) ->
       events_bus = @
@@ -85,6 +101,9 @@ Mangra = new () ->
       () ->
         events_bus.off name, once_handler
 
+    #### Events::on(name, handler, [context], [options])
+    # Binds handler to event. Returns function that will unbind handler from event.
+
     on: (name, handler, context, options) ->
       events_names = name.split /\s*,\s*/
       for event_name in events_names
@@ -92,8 +111,19 @@ Mangra = new () ->
       () =>
         @off name, handler
 
+    #### Events::on(name, handler, [context], [options])
+    # Unbinds handler from event. Returns function that will bind handler back to event.
+
     off: (name, handler) ->
-      @create(name).off handler
+      if @list[name]
+        @list[name].off handler
+
+      () =>
+        @on name, handler
+
+    #### Events::fire(name, handler, [context], [options])
+    # Gets event's bus by name and fires it. If there is no such event's bus — creates it, 
+    # this is needed for handlers recall feature 
 
     fire: (name, attributes) ->
       @create(name).fire attributes
