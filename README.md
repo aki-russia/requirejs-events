@@ -3,6 +3,13 @@ Mangra
 
 Simple, small and fast events bus.
 
+## Install
+
+	$ bower install mangra
+
+mangra.js is inside `dist/` folder, but it
+requires [batchjs](https://github.com/aki-russia/batchjs) and [ui_guid_generator](), so, don't forget to include it from `dist/lib/` folder.
+
 ## Usage
 
 As default, `mangra` refers to global events bus.
@@ -69,7 +76,7 @@ You can `sprout` new event busses from global or any another, it is useful when 
 
 `mangra.sprout([bus_name])`
 
-If name is not given, bus will not be discoverable by it name in parent bus.
+If name is not given it will be generated automatically.
 
 	var new_bus = mangra.sprout('new_bus_name');
 	
@@ -80,8 +87,7 @@ If name is not given, bus will not be discoverable by it name in parent bus.
 	new_bus.on('some_event', handler);
 	
 	mangra.fire('some_event'); // the handler will not fire
-  new_bus.fire('some_event'); // the handler will fire
-	mangra.new_bus_name.fire('some_event'); // the handler will fire
+	new_bus.fire('some_event'); // the handler will fire
 	
 	
 #### Initialize object as events bus 
@@ -103,10 +109,7 @@ Also you can `init`  any object as events bus, useful when you need to provide e
 
 Mangra isn't watching for any changes in objects, all events should be called manually 
 
-
-## Install
-
-	$ bower install mangra
+----
 
 
 Freely distributable under the MIT license.

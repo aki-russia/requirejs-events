@@ -5,21 +5,22 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-jasmine');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
-    // jasmine: {
-    //   unit: {
-    //     src: "dist/mangra.js",
-    //     options: {
-    //       keepRunner: true,
-    //       specs: 'spec/*_spec.js',
-    //       // vendor: 'spec/vendor/*.js'
-    //       helpers: ['spec/**/**_fixture.js']
-    //     }
-    //   }
-    // },
+    jasmine: {
+      unit: {
+        src: "dist/mangra.js",
+        options: {
+          keepRunner: true,
+          specs: 'spec/*_spec.js',
+          // vendor: 'spec/vendor/*.js'
+          helpers: ['spec/**/**_fixture.js']
+        }
+      }
+    },
 
     clean: {
       tmp: ['_tmp']
@@ -43,6 +44,16 @@ module.exports = function(grunt) {
         options: {
           bare: true
         }
+      }
+    },
+
+    copy: {
+      scripts: {
+        expand: true,
+        flatten: true,
+        src: '**/dist/*.js',
+        dest: 'dist/lib/',
+        cwd: 'components/'
       }
     },
 
@@ -70,7 +81,7 @@ module.exports = function(grunt) {
     grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
   });
 
-  grunt.registerTask('compile', ['clean', 'coffee']);
+  grunt.registerTask('compile', ['clean', 'coffee', 'copy']);
   grunt.registerTask('build', ['compile', 'uglify']);
   grunt.registerTask('test', ['compile', 'jasmine:unit']);
 
