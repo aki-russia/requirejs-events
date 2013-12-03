@@ -1,6 +1,6 @@
 # mangra v 0.0.1
 # (c) 2012 Dmitriy Kharchenko
-# https://github.com/aki-russia/requirejs-Stem
+# https://github.com/aki-russia/mangra
 # Freely distributable under the MIT license.
 
 Mangra = new () ->
