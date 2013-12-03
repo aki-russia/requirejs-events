@@ -1,15 +1,15 @@
 var Mangra;
 
 Mangra = new function() {
-  var Bus, Events, batch_thread;
+  var Bump, Stem, batch_thread;
   batch_thread = batch();
-  Bus = function(name) {
+  Bump = function(name) {
     this.name = name;
     this._handlers = [];
     this._last_params = null;
     return this;
   };
-  Bus.prototype = {
+  Bump.prototype = {
     _handlers_caller: function(handlers) {
       var args, event_data;
       handlers = (handlers || this._handlers).concat([]);
@@ -48,12 +48,12 @@ Mangra = new function() {
       return this._handlers_caller();
     }
   };
-  Events = function(name) {
+  Stem = function(name) {
     this.name = name;
     this.list = {};
     return this;
   };
-  Events.prototype = {
+  Stem.prototype = {
     list: {},
     init: function(object) {
       var events_bus;
@@ -73,7 +73,7 @@ Mangra = new function() {
     },
     sprout: function(name) {
       var instance;
-      instance = this[name] || new Events(name);
+      instance = this[name] || new Stem(name);
       if (name != null) {
         this[name] = instance;
       }
@@ -81,12 +81,19 @@ Mangra = new function() {
     },
     create: function(name) {
       if (!name) {
-        return new Bus;
+        return new Bump;
       }
       if (this.list[name] != null) {
         return this.list[name];
       }
-      return this.list[name] = new Bus(name);
+      return this.list[name] = new Bump(name);
+    },
+    forget: function(name) {
+      if (!name) {
+        return;
+      }
+      delete this.list[name];
+      return this;
     },
     once: function(name, handler, context, options) {
       var events_bus, once_handler;
@@ -125,5 +132,5 @@ Mangra = new function() {
       return this.create(name).fire(attributes);
     }
   };
-  return new Events;
+  return new Stem;
 };

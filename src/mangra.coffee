@@ -1,17 +1,17 @@
 # mangra v 0.0.1
 # (c) 2012 Dmitriy Kharchenko
-# https://github.com/aki-russia/requirejs-events
+# https://github.com/aki-russia/requirejs-Stem
 # Freely distributable under the MIT license.
 
 Mangra = new () ->
   batch_thread = batch()
 
-  Bus = (@name) ->
+  Bump = (@name) ->
     @_handlers = []
     @_last_params = null
     @
 
-  Bus:: =
+  Bump:: =
     _handlers_caller: (handlers) ->
       handlers = (handlers or @_handlers).concat []
       event_data = 
@@ -43,18 +43,18 @@ Mangra = new () ->
       @_handlers_caller()
 
 
-  Events = (@name) ->
+  Stem = (@name) ->
      @list = {}
      @
 
-  Events:: =
+  Stem:: =
 
-    #### Events::list
-    # List of events in current bus
+    #### Stem::list
+    # List of Stem in current bus
     list: {}
 
-    #### Events::init(object)
-    # Initialize provided object with new events bus interface.
+    #### Stem::init(object)
+    # Initialize provided object with new Stem bus interface.
 
     init: (object) ->
       events_bus = @sprout()
@@ -63,31 +63,39 @@ Mangra = new () ->
       object.on = ->   return events_bus.on.apply bus, arguments
       object.off = ->  return events_bus.off.apply bus, arguments
 
-    #### Events::sprout([name])
+    #### Stem::sprout([name])
     # Allows you to sprout new event busses existing one,
-    # useful when you need to incapsulate some events inside particular module.
+    # useful when you need to incapsulate some Stem inside particular module.
     # New bus discoverable by the name provided. If name isn't provided, then bus not be saved in parent, for memory sake.
 
     sprout: (name) ->
-      instance = @[name] or new Events name
+      instance = @[name] or new Stem name
       if name?
         @[name] = instance
       instance
 
 
-    #### Events::create([name])
+    #### Stem::create([name])
     # Creates bus for particular event, if event's bus already exists — return it.
 
     create: (name) ->
       if not name
-        return new Bus
+        return new Bump
         
       if @list[name]?
         return @list[name]
 
-      @list[name] = new Bus name
+      @list[name] = new Bump name
 
-    #### Events::once(name, handler, [context], [options])
+    #### Stem::forget([name])
+    # Removes previously created Bump instance
+
+    forget: (name) ->
+      return if not name
+      delete @list[name]
+      @
+
+    #### Stem::once(name, handler, [context], [options])
     # Binds handler to event and calls it only once. Returns function that will unbind handler from event.
 
     once: (name, handler, context, options) ->
@@ -101,7 +109,7 @@ Mangra = new () ->
       () ->
         events_bus.off name, once_handler
 
-    #### Events::on(name, handler, [context], [options])
+    #### Stem::on(name, handler, [context], [options])
     # Binds handler to event. Returns function that will unbind handler from event.
 
     on: (name, handler, context, options) ->
@@ -111,7 +119,7 @@ Mangra = new () ->
       () =>
         @off name, handler
 
-    #### Events::on(name, handler, [context], [options])
+    #### Stem::on(name, handler, [context], [options])
     # Unbinds handler from event. Returns function that will bind handler back to event.
 
     off: (name, handler) ->
@@ -121,11 +129,11 @@ Mangra = new () ->
       () =>
         @on name, handler
 
-    #### Events::fire(name, handler, [context], [options])
+    #### Stem::fire(name, handler, [context], [options])
     # Gets event's bus by name and fires it. If there is no such event's bus — creates it, 
     # this is needed for handlers recall feature 
 
     fire: (name, attributes) ->
       @create(name).fire attributes
 
-  new Events
+  new Stem
