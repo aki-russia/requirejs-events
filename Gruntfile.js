@@ -14,10 +14,10 @@ module.exports = function(grunt) {
       unit: {
         src: "dist/mangra.js",
         options: {
-          keepRunner: true,
+          keepRunner: false,
           specs: 'spec/*_spec.js',
-          vendor: ['dist/lib/batch.js', 'dist/lib/ui-guid-generator.js'],
-          helpers: ['spec/**/**_fixture.js']
+          vendor: ['dist/lib/batch.js', 'dist/lib/ui-guid-generator.js']
+          // helpers: ['spec/**/**_fixture.js']
         }
       }
     },
