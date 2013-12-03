@@ -16,7 +16,7 @@ module.exports = function(grunt) {
         options: {
           keepRunner: true,
           specs: 'spec/*_spec.js',
-          // vendor: 'spec/vendor/*.js'
+          vendor: ['dist/lib/batch.js', 'dist/lib/ui-guid-generator.js'],
           helpers: ['spec/**/**_fixture.js']
         }
       }
