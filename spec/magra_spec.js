@@ -189,6 +189,40 @@ describe('mangra events spec', function(){
         expect(spy.calls.length).toBe(1);
       });
     });
+
+    describe('sprouting new scape', function(){
+      it("it should sprout new scape from existing and save ref to it", function(){
+        var sprouted = mangra.sprout('new_scape');
+
+        expect(sprouted.prototype).toBe(mangra.prototype);
+        expect(sprouted).toBe(mangra.new_scape);
+      });
+
+      it("it should sprout new scape from existing without saving ref to it, when name not specified", function(){
+        var sprouted = mangra.sprout();
+
+        expect(sprouted.prototype).toBe(mangra.prototype);
+        expect(sprouted).not.toBe(mangra[sprouted.name]);
+      });
+
+      it("shouldn't rewrite any existing fields", function(){
+        var on_method = mangra.on;
+        var off_method = mangra.off;
+        mangra_fields = {};
+        for(field_name in mangra){
+          if(mangra.hasOwnProperty(field_name)){
+            mangra_fields[field_name] = mangra[field_name];
+            mangra.sprout(field_name);
+          }
+        }
+
+        for(field_name in mangra_fields){
+          if(mangra_fields.hasOwnProperty(field_name)){
+            expect(mangra_fields[field_name]).toBe(mangra[field_name]);
+          }
+        }
+      });
+    });
   });
   // describe('binding / unbinding handlers', function(){});
   // describe('firing events', function(){});

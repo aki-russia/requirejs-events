@@ -39,9 +39,9 @@ mangra = new function() {
         next_handler = _ref[handler_index];
         if (next_handler.id === handler.id) {
           this._handlers.splice(handler_index, 1);
-          return this;
         }
       }
+      return this;
     },
     fire: function(data) {
       this._last_params = data;
@@ -75,11 +75,19 @@ mangra = new function() {
     },
     sprout: function(name) {
       var instance;
-      instance = this[name] || new Scape(name);
-      if (name != null) {
-        this[name] = instance;
+      if (this[name]) {
+        if (this[name] instanceof Scape) {
+          return this[name];
+        } else {
+          return false;
+        }
+      } else {
+        instance = new Scape(name);
+        if (name) {
+          this[name] = instance;
+        }
+        return instance;
       }
-      return instance;
     },
     create: function(name) {
       if (!name) {
@@ -135,5 +143,5 @@ mangra = new function() {
       return this.create(name).fire(attributes);
     }
   };
-  return new Scape;
+  return new Scape("mangra");
 };

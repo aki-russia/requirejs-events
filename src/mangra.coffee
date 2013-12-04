@@ -36,7 +36,8 @@ mangra = new () ->
       for next_handler, handler_index in @_handlers
         if next_handler.id is handler.id
           @_handlers.splice handler_index, 1
-          return @
+      
+      @
 
     fire: (data) ->
       @_last_params = data
@@ -73,10 +74,17 @@ mangra = new () ->
     # New bus discoverable by the name provided. If name isn't provided, then bus not be saved in parent, for memory sake.
 
     sprout: (name) ->
-      instance = @[name] or new Scape name
-      if name?
-        @[name] = instance
-      instance
+      if @[name]
+        if @[name] instanceof Scape
+          @[name]
+        else 
+          false
+      else 
+        instance = new Scape name
+        if name
+          @[name] = instance
+        
+        instance
 
 
     #### Scape::create([name])
@@ -141,4 +149,4 @@ mangra = new () ->
     fire: (name, attributes) ->
       @create(name).fire attributes
 
-  new Scape
+  new Scape "mangra"
