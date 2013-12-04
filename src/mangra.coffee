@@ -3,7 +3,7 @@
 # https://github.com/aki-russia/mangra
 # Freely distributable under the MIT license.
 
-Mangra = new () ->
+mangra = new () ->
   batch_thread = batch()
 
   Bump = (@name) ->
@@ -43,39 +43,43 @@ Mangra = new () ->
       @_handlers_caller()
 
 
-  Stem = (@name) ->
+  Scape = (@name) ->
      @list = {}
      @
 
-  Stem:: =
+  Scape:: =
 
-    #### Stem::list
-    # List of Stem in current bus
+    #### Scape::list
+    # List of Scape in current bus
     list: {}
 
-    #### Stem::init(object)
-    # Initialize provided object with new Stem bus interface.
+    #### Scape::init(object)
+    # Initialize provided object with new Scape bus interface.
 
     init: (object) ->
       events_bus = @sprout()
-      object.fire = -> return events_bus.fire.apply bus, arguments
-      object.once = -> return events_bus.once.apply bus, arguments
-      object.on = ->   return events_bus.on.apply bus, arguments
-      object.off = ->  return events_bus.off.apply bus, arguments
+      interface_methods = ["on", "off", "once", "fire"]
 
-    #### Stem::sprout([name])
+      object.fire = -> return events_bus.fire.apply events_bus, arguments
+      object.once = -> return events_bus.once.apply events_bus, arguments
+      object.on = ->   return events_bus.on.apply events_bus, arguments
+      object.off = ->  return events_bus.off.apply events_bus, arguments
+
+      object
+
+    #### Scape::sprout([name])
     # Allows you to sprout new event busses existing one,
-    # useful when you need to incapsulate some Stem inside particular module.
+    # useful when you need to incapsulate some Scape inside particular module.
     # New bus discoverable by the name provided. If name isn't provided, then bus not be saved in parent, for memory sake.
 
     sprout: (name) ->
-      instance = @[name] or new Stem name
+      instance = @[name] or new Scape name
       if name?
         @[name] = instance
       instance
 
 
-    #### Stem::create([name])
+    #### Scape::create([name])
     # Creates bus for particular event, if event's bus already exists — return it.
 
     create: (name) ->
@@ -87,7 +91,7 @@ Mangra = new () ->
 
       @list[name] = new Bump name
 
-    #### Stem::forget([name])
+    #### Scape::forget([name])
     # Removes previously created Bump instance
 
     forget: (name) ->
@@ -95,21 +99,22 @@ Mangra = new () ->
       delete @list[name]
       @
 
-    #### Stem::once(name, handler, [context], [options])
+    #### Scape::once(name, handler, [context], [options])
     # Binds handler to event and calls it only once. Returns function that will unbind handler from event.
 
     once: (name, handler, context, options) ->
       events_bus = @
-      once_handler = ->
+
+      once_handler = =>
         handler.apply(@, arguments)
-        events_bus.off once_handler
+        @off name, once_handler
 
       @create(name).on once_handler, context, options
 
       () ->
         events_bus.off name, once_handler
 
-    #### Stem::on(name, handler, [context], [options])
+    #### Scape::on(name, handler, [context], [options])
     # Binds handler to event. Returns function that will unbind handler from event.
 
     on: (name, handler, context, options) ->
@@ -119,7 +124,7 @@ Mangra = new () ->
       () =>
         @off name, handler
 
-    #### Stem::on(name, handler, [context], [options])
+    #### Scape::off(name, handler, [context], [options])
     # Unbinds handler from event. Returns function that will bind handler back to event.
 
     off: (name, handler) ->
@@ -129,11 +134,11 @@ Mangra = new () ->
       () =>
         @on name, handler
 
-    #### Stem::fire(name, handler, [context], [options])
+    #### Scape::fire(name, handler, [context], [options])
     # Gets event's bus by name and fires it. If there is no such event's bus — creates it, 
     # this is needed for handlers recall feature 
 
     fire: (name, attributes) ->
       @create(name).fire attributes
 
-  new Stem
+  new Scape

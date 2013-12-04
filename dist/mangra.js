@@ -1,7 +1,7 @@
-var Mangra;
+var mangra;
 
-Mangra = new function() {
-  var Bump, Stem, batch_thread;
+mangra = new function() {
+  var Bump, Scape, batch_thread;
   batch_thread = batch();
   Bump = function(name) {
     this.name = name;
@@ -48,32 +48,34 @@ Mangra = new function() {
       return this._handlers_caller();
     }
   };
-  Stem = function(name) {
+  Scape = function(name) {
     this.name = name;
     this.list = {};
     return this;
   };
-  Stem.prototype = {
+  Scape.prototype = {
     list: {},
     init: function(object) {
-      var events_bus;
+      var events_bus, interface_methods;
       events_bus = this.sprout();
+      interface_methods = ["on", "off", "once", "fire"];
       object.fire = function() {
-        return events_bus.fire.apply(bus, arguments);
+        return events_bus.fire.apply(events_bus, arguments);
       };
       object.once = function() {
-        return events_bus.once.apply(bus, arguments);
+        return events_bus.once.apply(events_bus, arguments);
       };
       object.on = function() {
-        return events_bus.on.apply(bus, arguments);
+        return events_bus.on.apply(events_bus, arguments);
       };
-      return object.off = function() {
-        return events_bus.off.apply(bus, arguments);
+      object.off = function() {
+        return events_bus.off.apply(events_bus, arguments);
       };
+      return object;
     },
     sprout: function(name) {
       var instance;
-      instance = this[name] || new Stem(name);
+      instance = this[name] || new Scape(name);
       if (name != null) {
         this[name] = instance;
       }
@@ -96,11 +98,12 @@ Mangra = new function() {
       return this;
     },
     once: function(name, handler, context, options) {
-      var events_bus, once_handler;
+      var events_bus, once_handler,
+        _this = this;
       events_bus = this;
       once_handler = function() {
-        handler.apply(this, arguments);
-        return events_bus.off(once_handler);
+        handler.apply(_this, arguments);
+        return _this.off(name, once_handler);
       };
       this.create(name).on(once_handler, context, options);
       return function() {
@@ -132,5 +135,5 @@ Mangra = new function() {
       return this.create(name).fire(attributes);
     }
   };
-  return new Stem;
+  return new Scape;
 };

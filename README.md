@@ -109,6 +109,10 @@ Also you can `init`  any object as events bus, useful when you need to provide e
 
 Mangra isn't watching for any changes in objects, all events should be called manually 
 
+## Run tests
+
+`$ grunt test`
+
 ----
 
 

@@ -5,8 +5,8 @@ describe('mangra events spec', function(){
     var spy = null;
 
     beforeEach(function(){
-      Mangra.forget("event");
-      new_event = Mangra.create("event");
+      mangra.forget("event");
+      new_event = mangra.create("event");
       spy = jasmine.createSpy('spy');
       jasmine.Clock.useMock();
     });
@@ -123,7 +123,73 @@ describe('mangra events spec', function(){
       expect(spy.mostRecentCall.args[1]).toBe(event_data[1]);
     });
   });
-  // describe('initialize objects with events bus', function(){});
+
+
+  describe('Scape', function(){
+
+    beforeEach(function(){
+      mangra.list = {};
+      jasmine.Clock.useMock();
+    });
+
+    describe("initializing object", function(){
+      var object = null;
+      var initialized_object = null;
+      var spy = null;
+
+      beforeEach(function(){
+        spy = jasmine.createSpy("spy");
+        mangra.list = {};
+        object = {
+          foo: "bar"
+        };
+        initialized_object = mangra.init(object);
+      });
+
+      it("should initialize object with events bus", function(){
+        expect(initialized_object).toBe(object);
+        expect(object.on).toBeDefined();
+        expect(object.off).toBeDefined();
+        expect(object.once).toBeDefined();
+        expect(object.fire).toBeDefined();
+      });
+
+      it("should bind handlers to events", function(){
+        object.on("event", spy);
+
+        object.fire("event", {});
+        object.fire("event", {});
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.length).toBe(2);
+      });
+
+      it("should unbind previously binded handlers to events", function(){
+        object.on("event", spy);
+        object.off("event", spy);
+
+        object.fire("event", {});
+        jasmine.Clock.tick(1000);
+
+        expect(spy).not.toHaveBeenCalled();
+      });
+
+      it("should call handler only once", function(){
+        object.once("event", spy);
+
+        object.fire("event", {});
+        object.fire("event", {});
+        object.fire("event", {});
+        object.fire("event", {});
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy.calls.length).toBe(1);
+      });
+    });
+  });
   // describe('binding / unbinding handlers', function(){});
   // describe('firing events', function(){});
   // describe('events bus, sprouting new', function(){});
