@@ -5,7 +5,7 @@ describe('mangra events spec', function(){
     var spy = null;
 
     beforeEach(function(){
-      mangra.forget("event");
+      mangra.list = {};
       new_event = mangra.create("event");
       spy = jasmine.createSpy('spy');
       jasmine.Clock.useMock();
@@ -50,7 +50,7 @@ describe('mangra events spec', function(){
 
       expect(new_event._handlers.length).toBe(1);
       expect(new_event._handlers[0]).toBe(spy);
-      expect(new_event._handlers[0].id).toBeDefined();
+      expect(new_event._handlers[0].event_data.id).toBeDefined();
       expect(new_event._handlers[0].event_data[id].options).toBe(options);
       expect(new_event._handlers[0].event_data[id].context).toBe(context);
     });
@@ -105,6 +105,36 @@ describe('mangra events spec', function(){
       jasmine.Clock.tick(1000);
 
       expect(handler_context).toBe(context);
+    });
+
+    it("handlers should be called in different contexts for different events, if specified", function(){
+      var handler_context = null;
+      var another_new_event = mangra.create('another_event');
+
+      var handler = function(){
+        handler_context = this;
+      };
+
+      var options = {};
+
+      var context_one = {
+        foo: "bar"
+      };
+
+      var context_two = {
+        foo: "bar"
+      };
+
+      new_event.on(handler, context_one);
+      another_new_event.on(handler, context_two);
+      new_event.fire();
+      jasmine.Clock.tick(1000);
+
+      expect(handler_context).toBe(context_one);
+
+      another_new_event.fire();
+      jasmine.Clock.tick(1000);
+      expect(handler_context).toBe(context_two);
     });
 
     it("handler should be called immediately if option 'recall' is set and event was fired before", function(){
@@ -412,9 +442,62 @@ describe('mangra events spec', function(){
         expect(spy.calls.length).toBe(0);
       });
     });
-  });
-  // describe('binding / unbinding handlers', function(){});
-  // describe('firing events', function(){});
-  // describe('events bus, sprouting new', function(){});
+    describe('firing events', function(){
+      var spy = null;
 
+      beforeEach(function(){
+        spy = jasmine.createSpy("spy");
+        mangra.list = {};
+        jasmine.Clock.useMock();
+      });
+
+      it("should fire events", function(){
+        mangra.on("one", spy)
+        mangra.on("two", spy)
+        mangra.on("three", spy)
+        mangra.on("four", spy)
+
+        mangra.fire("one")
+        mangra.fire("two")
+        mangra.fire("three")
+        mangra.fire("four")
+
+        expect(spy.calls.length).toBe(4);
+      });
+
+      it("should provide data to handler", function(){
+        mangra.on("one", spy);
+        var data = {};
+        mangra.fire("one", data);
+        expect(spy.mostRecentCall.args[0]).toBe(data);
+      });
+
+      it("should provide undefined to handler when data is not specified", function(){
+        mangra.on("one", spy);
+        var data = {};
+        mangra.fire("one");
+        expect(spy.mostRecentCall.args[0]).not.toBeDefined();
+      });
+
+      it("should provide different data every time", function(){
+        mangra.on("one", spy);
+        mangra.on("two", spy);
+        mangra.on("three", spy);
+
+        var data_one = {};
+        var data_two = {};
+        var data_three = {};
+
+        mangra.fire("one", data_one);
+        mangra.fire("two", data_two);
+        mangra.fire("three", data_three);
+
+        expect(spy.calls[0].args[0]).toBe(data_one);
+        expect(spy.calls[1].args[0]).toBe(data_two);
+        expect(spy.calls[2].args[0]).toBe(data_three);
+      });
+
+    });
+  });
+  
 });

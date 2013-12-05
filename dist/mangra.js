@@ -35,7 +35,7 @@ mangra = new function() {
       handler.event_data[this._id] = handler.event_data[this._id] || {};
       handler.event_data[this._id].context = context || handler.event_data[this._id].context;
       handler.event_data[this._id].options = options || handler.event_data[this._id].options;
-      handler.id = handler.id || ui_guid_generator();
+      handler.event_data.id = handler.event_data.id || ui_guid_generator();
       this._handlers.push(handler);
       if ((options != null) && (options.recall != null) && (this._last_params != null)) {
         this._handlers_caller([handler]);
@@ -144,8 +144,8 @@ mangra = new function() {
       if (this.list[name]) {
         this.list[name].off(handler);
       }
-      return function() {
-        return _this.on(name, handler);
+      return function(context, options) {
+        return _this.on(name, handler, context, options);
       };
     },
     fire: function(name, attributes) {

@@ -34,7 +34,7 @@ mangra = new () ->
       handler.event_data[@_id].context = context or handler.event_data[@_id].context
       handler.event_data[@_id].options = options or handler.event_data[@_id].options
       
-      handler.id = handler.id or ui_guid_generator()
+      handler.event_data.id = handler.event_data.id or ui_guid_generator()
 
       @_handlers.push handler
       if options? and options.recall? and @_last_params?
@@ -146,8 +146,8 @@ mangra = new () ->
       if @list[name]
         @list[name].off handler
 
-      () =>
-        @on name, handler
+      (context, options) =>
+        @on name, handler, context, options
 
     #### Scape::fire(name, handler, [context], [options])
     # Gets event's bus by name and fires it. If there is no such event's bus — creates it, 
