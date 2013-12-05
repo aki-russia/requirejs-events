@@ -7,6 +7,7 @@ mangra = new () ->
   batch_thread = batch()
 
   Bump = (@name) ->
+    @_id = ui_guid_generator()
     @_handlers = []
     @_last_params = null
     @
@@ -20,23 +21,29 @@ mangra = new () ->
       args = if toString.call(@_last_params) is '[object Array]' then @_last_params else [@_last_params]
       args.push event_data
 
-      batch_thread.use(handlers).each (handler, index) ->
-        handler.apply handler.context, args
+      batch_thread.use(handlers).each (handler, index) =>
+        if not handler.event_data?[@_id]?
+          @_handlers.splice index, 1
+          delete handler.event_data[@_id]
+        else
+          handler.apply handler.event_data[@_id].context, args
 
     on: (handler, context, options) ->
-      handler.context = context or handler.context
-      handler.options = options or handler.options
-      handler.id = ui_guid_generator()
+      handler.event_data = handler.event_data or {}
+      handler.event_data[@_id] = handler.event_data[@_id] or {}
+      handler.event_data[@_id].context = context or handler.event_data[@_id].context
+      handler.event_data[@_id].options = options or handler.event_data[@_id].options
+      
+      handler.id = handler.id or ui_guid_generator()
+
       @_handlers.push handler
       if options? and options.recall? and @_last_params?
         @_handlers_caller [handler]
       @
 
     off: (handler) ->
-      for next_handler, handler_index in @_handlers
-        if next_handler.id is handler.id
-          @_handlers.splice handler_index, 1
-      
+      if handler.event_data and handler.event_data[@_id]
+        delete handler.event_data[@_id]
       @
 
     fire: (data) ->
@@ -59,7 +66,6 @@ mangra = new () ->
 
     init: (object) ->
       events_bus = @sprout()
-      interface_methods = ["on", "off", "once", "fire"]
 
       object.fire = -> return events_bus.fire.apply events_bus, arguments
       object.once = -> return events_bus.once.apply events_bus, arguments
@@ -113,14 +119,14 @@ mangra = new () ->
     once: (name, handler, context, options) ->
       events_bus = @
 
-      once_handler = =>
-        handler.apply(@, arguments)
-        @off name, once_handler
+      off_handler = () =>
+        @off name, handler
+        @off name, off_handler
 
-      @create(name).on once_handler, context, options
+      @on name, handler, context, options
+      @on name, off_handler
 
-      () ->
-        events_bus.off name, once_handler
+      off_handler
 
     #### Scape::on(name, handler, [context], [options])
     # Binds handler to event. Returns function that will unbind handler from event.
@@ -130,7 +136,8 @@ mangra = new () ->
       for event_name in events_names
         @create(event_name).on handler, context, options
       () =>
-        @off name, handler
+        for event_name in events_names
+          @off event_name, handler
 
     #### Scape::off(name, handler, [context], [options])
     # Unbinds handler from event. Returns function that will bind handler back to event.

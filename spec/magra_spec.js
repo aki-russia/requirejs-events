@@ -11,8 +11,25 @@ describe('mangra events spec', function(){
       jasmine.Clock.useMock();
     });
 
-    it("mangra should create a Bump instance", function(){
+    it("mangra should create a Bump instance and save ref to it", function(){
+      expect(mangra.list.event).toBe(new_event);
       expect(new_event.name).toBe("event");
+      expect(new_event._handlers.length).toBe(0);
+      expect(new_event._last_params).toBe(null);
+
+      expect(new_event._handlers_caller).toBeDefined();
+      expect(new_event.on).toBeDefined();
+      expect(new_event.off).toBeDefined();
+      expect(new_event.fire).toBeDefined();
+    });
+
+    it("mangra should create a Bump instance, without ref saving", function(){
+      mangra.forget("event");
+      new_event = mangra.create();
+
+      expect(mangra.list).toEqual({});
+
+      expect(new_event.name).toBe(undefined);
       expect(new_event._handlers.length).toBe(0);
       expect(new_event._last_params).toBe(null);
 
@@ -29,11 +46,13 @@ describe('mangra events spec', function(){
 
       new_event.on(spy, context, options);
 
+      id = new_event._id;
+
       expect(new_event._handlers.length).toBe(1);
       expect(new_event._handlers[0]).toBe(spy);
       expect(new_event._handlers[0].id).toBeDefined();
-      expect(new_event._handlers[0].options).toBe(options);
-      expect(new_event._handlers[0].context).toBe(context);
+      expect(new_event._handlers[0].event_data[id].options).toBe(options);
+      expect(new_event._handlers[0].event_data[id].context).toBe(context);
     });
 
     it("should unbind handler", function(){
@@ -44,7 +63,13 @@ describe('mangra events spec', function(){
       expect(new_event._handlers.length).toBe(1);
 
       new_event.off(spy);
+
+      new_event.fire();
+      jasmine.Clock.tick(1000);
+
       expect(new_event._handlers.length).toBe(0);
+      expect(spy).not.toHaveBeenCalled();
+      expect(spy.event_data[new_event._id]).not.toBeDefined(true);
     });
 
     it("should fire binded handlers", function(){
@@ -221,6 +246,170 @@ describe('mangra events spec', function(){
             expect(mangra_fields[field_name]).toBe(mangra[field_name]);
           }
         }
+      });
+    });
+    
+    describe('bind/unbind handlers', function(){
+      var spy = null;
+
+      beforeEach(function(){
+        spy = jasmine.createSpy("spy");
+        mangra.list = {};
+        jasmine.Clock.useMock();
+      });
+
+      it('should bind handler to event', function(){
+        mangra.on('event', spy);
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        jasmine.Clock.tick(1000);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.length).toBe(4);
+      });
+
+      it('".on" method should return function that unbinds handler', function(){
+        var unbind = mangra.on('event', spy);
+
+        unbind();
+
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(spy.calls.length).toBe(0);
+      });
+
+      it('should bind handler to several events', function(){
+        mangra.on('event, another_event', spy);
+
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('event');
+        mangra.fire('another_event');
+        mangra.fire('event');
+        mangra.fire('another_event');
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.length).toBe(4);
+      });
+
+      it('should bind handler to several events, but unbind from only one', function(){
+        mangra.on('event, another_event', spy);
+
+        mangra.off('another_event', spy);
+
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('event');
+        mangra.fire('another_event');
+        mangra.fire('event');
+        mangra.fire('another_event');
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.length).toBe(2);
+      });
+
+      it('".on" method should return function that unbinds handler from every event', function(){
+        var unbind = mangra.on('event, another_event', spy);
+
+        unbind();
+
+        mangra.fire('event');
+        mangra.fire('another_event');
+        mangra.fire('event');
+        mangra.fire('another_event');
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(spy.calls.length).toBe(0);
+      });
+
+
+      it('should bind handler only once', function(){
+        mangra.once('event', spy);
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        jasmine.Clock.tick(1000);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.length).toBe(1);
+      });
+
+      it('should unbind handler that was binded to be called only once', function(){
+        mangra.once('event', spy);
+        mangra.off('event', spy);
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        jasmine.Clock.tick(1000);
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(spy.calls.length).toBe(0);
+      });
+
+      it('".once" method should return method, that unbinds handler', function(){
+        var unbind = mangra.once('event', spy);
+        unbind();
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        mangra.fire('event');
+        jasmine.Clock.tick(1000);
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(spy.calls.length).toBe(0);
+      });
+
+      it('should bind once handler to several events', function(){
+        mangra.on('event, another_event', spy);
+
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('event');
+        mangra.fire('another_event');
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy).toHaveBeenCalled();
+        expect(spy.calls.length).toBe(2);
+      });
+
+      it('should bind once handler to several events, but unbind from only one', function(){
+        mangra.once('event, another_event', spy);
+
+        mangra.off('another_event', spy);
+
+        expect(spy).not.toHaveBeenCalled();
+
+        mangra.fire('another_event');
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy).not.toHaveBeenCalled();
+        expect(spy.calls.length).toBe(0);
       });
     });
   });

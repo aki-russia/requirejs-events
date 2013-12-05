@@ -5,13 +5,15 @@ mangra = new function() {
   batch_thread = batch();
   Bump = function(name) {
     this.name = name;
+    this._id = ui_guid_generator();
     this._handlers = [];
     this._last_params = null;
     return this;
   };
   Bump.prototype = {
     _handlers_caller: function(handlers) {
-      var args, event_data;
+      var args, event_data,
+        _this = this;
       handlers = (handlers || this._handlers).concat([]);
       event_data = {
         name: this.name
@@ -19,13 +21,21 @@ mangra = new function() {
       args = toString.call(this._last_params) === '[object Array]' ? this._last_params : [this._last_params];
       args.push(event_data);
       return batch_thread.use(handlers).each(function(handler, index) {
-        return handler.apply(handler.context, args);
+        var _ref;
+        if (((_ref = handler.event_data) != null ? _ref[_this._id] : void 0) == null) {
+          _this._handlers.splice(index, 1);
+          return delete handler.event_data[_this._id];
+        } else {
+          return handler.apply(handler.event_data[_this._id].context, args);
+        }
       });
     },
     on: function(handler, context, options) {
-      handler.context = context || handler.context;
-      handler.options = options || handler.options;
-      handler.id = ui_guid_generator();
+      handler.event_data = handler.event_data || {};
+      handler.event_data[this._id] = handler.event_data[this._id] || {};
+      handler.event_data[this._id].context = context || handler.event_data[this._id].context;
+      handler.event_data[this._id].options = options || handler.event_data[this._id].options;
+      handler.id = handler.id || ui_guid_generator();
       this._handlers.push(handler);
       if ((options != null) && (options.recall != null) && (this._last_params != null)) {
         this._handlers_caller([handler]);
@@ -33,13 +43,8 @@ mangra = new function() {
       return this;
     },
     off: function(handler) {
-      var handler_index, next_handler, _i, _len, _ref;
-      _ref = this._handlers;
-      for (handler_index = _i = 0, _len = _ref.length; _i < _len; handler_index = ++_i) {
-        next_handler = _ref[handler_index];
-        if (next_handler.id === handler.id) {
-          this._handlers.splice(handler_index, 1);
-        }
+      if (handler.event_data && handler.event_data[this._id]) {
+        delete handler.event_data[this._id];
       }
       return this;
     },
@@ -56,9 +61,8 @@ mangra = new function() {
   Scape.prototype = {
     list: {},
     init: function(object) {
-      var events_bus, interface_methods;
+      var events_bus;
       events_bus = this.sprout();
-      interface_methods = ["on", "off", "once", "fire"];
       object.fire = function() {
         return events_bus.fire.apply(events_bus, arguments);
       };
@@ -106,17 +110,16 @@ mangra = new function() {
       return this;
     },
     once: function(name, handler, context, options) {
-      var events_bus, once_handler,
+      var events_bus, off_handler,
         _this = this;
       events_bus = this;
-      once_handler = function() {
-        handler.apply(_this, arguments);
-        return _this.off(name, once_handler);
+      off_handler = function() {
+        _this.off(name, handler);
+        return _this.off(name, off_handler);
       };
-      this.create(name).on(once_handler, context, options);
-      return function() {
-        return events_bus.off(name, once_handler);
-      };
+      this.on(name, handler, context, options);
+      this.on(name, off_handler);
+      return off_handler;
     },
     on: function(name, handler, context, options) {
       var event_name, events_names, _i, _len,
@@ -127,7 +130,13 @@ mangra = new function() {
         this.create(event_name).on(handler, context, options);
       }
       return function() {
-        return _this.off(name, handler);
+        var _j, _len1, _results;
+        _results = [];
+        for (_j = 0, _len1 = events_names.length; _j < _len1; _j++) {
+          event_name = events_names[_j];
+          _results.push(_this.off(event_name, handler));
+        }
+        return _results;
       };
     },
     off: function(name, handler) {
