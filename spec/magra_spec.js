@@ -442,6 +442,80 @@ describe('mangra events spec', function(){
         expect(spy.calls.length).toBe(0);
       });
     });
+
+    describe('waiting for set of events', function(){
+      var spy = null;
+
+      beforeEach(function(){
+        spy = jasmine.createSpy("spy");
+        mangra.list = {};
+        jasmine.Clock.useMock();
+      });
+
+      it("should call handler after bunch of events are fired", function(){
+        mangra.wait("one, two, three, four", spy)
+
+        mangra.fire("one");
+        mangra.fire("two");
+        mangra.fire("three");
+        mangra.fire("four");
+
+        jasmine.Clock.tick(1000);
+
+
+        expect(spy.calls.length).toBe(1);
+      });
+
+      it("should call handler after only when needed bunch of events are fired", function(){
+        mangra.wait("one, two, three, four", spy)
+
+        mangra.fire("one");
+        mangra.fire("one");
+        mangra.fire("one");
+        mangra.fire("two");
+        mangra.fire("three");
+        mangra.fire("three");
+        mangra.fire("four");
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy.calls.length).toBe(1);
+      });
+
+      it("should send data from every event to handler", function(){
+        mangra.wait("one, two, three, four", spy);
+
+        mangra.fire("one",  { fo: "bar"});
+        mangra.fire("two",  { foo: "barr"});
+        mangra.fire("three",{ fooo: "barrr"});
+        mangra.fire("four", { foooo: "barrrr"});
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy.calls.length).toBe(1);
+        expect(spy.mostRecentCall.args[0].one[0]).toEqual({ fo: "bar"});
+        expect(spy.mostRecentCall.args[0].two[0]).toEqual({ foo: "barr"});
+        expect(spy.mostRecentCall.args[0].three[0]).toEqual({ fooo: "barrr"});
+        expect(spy.mostRecentCall.args[0].four[0]).toEqual({ foooo: "barrrr"});
+      });
+
+      it("should unbind handler from waiting", function(){
+        var unwait = mangra.wait("one, two, three, four", spy);
+
+        unwait();
+
+        mangra.fire("one",  { fo: "bar"});
+        mangra.fire("two",  { foo: "barr"});
+        mangra.fire("three",{ fooo: "barrr"});
+        mangra.fire("four", { foooo: "barrrr"});
+
+        jasmine.Clock.tick(1000);
+
+        expect(spy.calls.length).toBe(0);
+      });
+    });
+
+
     describe('firing events', function(){
       var spy = null;
 
@@ -462,6 +536,8 @@ describe('mangra events spec', function(){
         mangra.fire("three")
         mangra.fire("four")
 
+        jasmine.Clock.tick(1000);
+
         expect(spy.calls.length).toBe(4);
       });
 
@@ -476,6 +552,7 @@ describe('mangra events spec', function(){
         mangra.on("one", spy);
         var data = {};
         mangra.fire("one");
+        jasmine.Clock.tick(1000);
         expect(spy.mostRecentCall.args[0]).not.toBeDefined();
       });
 
@@ -491,6 +568,8 @@ describe('mangra events spec', function(){
         mangra.fire("one", data_one);
         mangra.fire("two", data_two);
         mangra.fire("three", data_three);
+
+        jasmine.Clock.tick(1000);
 
         expect(spy.calls[0].args[0]).toBe(data_one);
         expect(spy.calls[1].args[0]).toBe(data_two);

@@ -40,7 +40,27 @@ Recall handler, when it bond after event was fired
 	mangra.on('some_event', function(){ 
 		console.log(this.foo);
     }, { foo: "bar"} , {recall: true} );
-        
+
+
+#### Set up handler to wait bunch of events
+
+`mangra.wait(events, handler, [context], [options]);`
+
+	
+	var handler = function(){
+		console.log()
+	};
+	var unwait = mangra.wait('some_event, another_event', handler);    
+	
+	//...
+	
+	mangra.fire('some_event');
+	
+	//...
+	
+	mangra.fire('another_event'); // after that handler will be called
+	
+	unwait(); //stop waiting
 	
 #### Bind handler to event, call it only once
 

@@ -148,6 +148,28 @@ mangra = new function() {
         return _this.on(name, handler, context, options);
       };
     },
+    wait: function(names, handler, context, options) {
+      var events_data, events_names, happen_events, waiting_handler;
+      events_names = names.split(/\s*,\s*/).sort();
+      happen_events = [];
+      events_data = {};
+      waiting_handler = function() {
+        var event_data;
+        event_data = arguments[arguments.length - 1];
+        if (events_data[event_data.name]) {
+          events_data[event_data.name] = arguments;
+          return;
+        }
+        events_data[event_data.name] = arguments;
+        happen_events.push(event_data.name);
+        if (happen_events.length === events_names.length) {
+          if (happen_events.sort().join(' ') === events_names.join(' ')) {
+            return handler.call(context, events_data);
+          }
+        }
+      };
+      return this.on(names, waiting_handler, context, options);
+    },
     fire: function(name, attributes) {
       return this.create(name).fire(attributes);
     }

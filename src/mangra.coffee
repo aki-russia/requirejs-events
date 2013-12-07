@@ -15,6 +15,7 @@ mangra = new () ->
   Bump:: =
     _handlers_caller: (handlers) ->
       handlers = (handlers or @_handlers).concat []
+
       event_data = 
         name: @name
 
@@ -49,6 +50,7 @@ mangra = new () ->
     fire: (data) ->
       @_last_params = data
       @_handlers_caller()
+
 
 
   Scape = (@name) ->
@@ -148,6 +150,32 @@ mangra = new () ->
 
       (context, options) =>
         @on name, handler, context, options
+
+    #### Scape::wait(name, handler, [context], [options])
+    # Binds handler to bunch of events and call it after all are fired.
+    # In this case handler receives data from all events in hash by event name
+
+    wait: (names, handler, context, options) ->
+      events_names = names.split(/\s*,\s*/).sort()
+      happen_events = []
+      events_data = {}
+
+      waiting_handler = () ->
+        event_data = arguments[arguments.length - 1]
+
+        if events_data[event_data.name]
+          events_data[event_data.name] = arguments
+          return
+        
+        events_data[event_data.name] = arguments
+        happen_events.push event_data.name
+
+        if happen_events.length is events_names.length
+          if happen_events.sort().join(' ') is events_names.join(' ')
+            handler.call context, events_data
+        
+      @on names, waiting_handler, context, options
+
 
     #### Scape::fire(name, handler, [context], [options])
     # Gets event's bus by name and fires it. If there is no such event's bus — creates it, 
