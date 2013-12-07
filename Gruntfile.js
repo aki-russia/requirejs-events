@@ -39,7 +39,7 @@ module.exports = function(grunt) {
     coffee: {
       compile: {
         files: {
-          'dist/mangra.js': 'src/mangra.coffee'
+          'dist/mangra.js': ["components/batchjs/src/batch.coffee", "components/ui_guid_generator/src/ui-guid-generator.coffee", 'src/mangra.coffee']
         },
         options: {
           bare: true
@@ -47,15 +47,15 @@ module.exports = function(grunt) {
       }
     },
 
-    copy: {
-      scripts: {
-        expand: true,
-        flatten: true,
-        src: '**/dist/*.js',
-        dest: 'dist/lib/',
-        cwd: 'components/'
-      }
-    },
+    // copy: {
+    //   scripts: {
+    //     expand: true,
+    //     flatten: true,
+    //     src: '**/dist/*.js',
+    //     dest: 'dist/lib/',
+    //     cwd: 'components/'
+    //   }
+    // },
 
     watch: {
       scripts: {
@@ -81,7 +81,7 @@ module.exports = function(grunt) {
     grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
   });
 
-  grunt.registerTask('compile', ['clean', 'coffee', 'copy']);
+  grunt.registerTask('compile', ['clean', 'coffee']);
   grunt.registerTask('build', ['compile', 'uglify']);
   grunt.registerTask('test', ['compile', 'jasmine:unit']);
 
